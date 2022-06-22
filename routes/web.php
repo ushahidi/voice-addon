@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BotManController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,8 +15,25 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::match(['get', 'post'], '/botman', [BotManController::class, 'handle']);
-Route::get('/', function () {
-    return 'Hello World';
+Route::match(array('GET', 'POST'), '/botman', [BotManController::class, 'handle']);
+Route::post('/', function (Request $request) {
+    error_log("received a call");
+    $data = $request->getContent();
+
+    error_log( $data );
+
+//    error_log($data['callerNumber']);
+
+    $text = "Welcome to Ushahid platform";
+    // Compose the response
+    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+    $response .= '<Response>';
+    $response .= '<Say>'.$text.'</Say>';
+    $response .= '</Response>';
+
+    // Print the response onto the page so that our gateway can read it
+    header('Content-type: text/plain');
+//    echo $response;
+    return $response;
 });
 

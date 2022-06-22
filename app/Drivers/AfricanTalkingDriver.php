@@ -15,8 +15,8 @@ use Illuminate\Http\Response;
 class AfricanTalkingDriver
 {
     // Set your app credentials
-    private  $username = 'sandbox';
-    private $apikey   = 'de91fcb752e44a75f7089386cdb9c99b3d0866adb61154c97f3f40856f5460f7';
+    private  $username = 'Intern';
+    private $apikey   = '2525d2eaabaf067a6b2a702284b3eb7477a9a2c68393fec3ab9b87915629e617';
 
     /**
      * Build payload from incoming request.
@@ -24,7 +24,7 @@ class AfricanTalkingDriver
      */
     public function buildReply($payload)
     {
-        $text = "Sorry, your phone number is not registered for this service. Good Bye.";
+        $text = "Welcome to Ushahidi Platform survey";
 
         // Compose the response
         $response  = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -38,7 +38,7 @@ class AfricanTalkingDriver
     public function buildResponseheaders(Response $response) {
         $response->withHeaders([
             'Content-type' => 'text/plain',
-            'apiKey' => this->$apikey
+            'apiKey' => $this->apikey
         ]);
     }
 

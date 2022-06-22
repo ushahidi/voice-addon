@@ -4,42 +4,43 @@ namespace App\Http\Controllers;
 
 use App\Drivers\AfricanTalkingDriver;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class BotManController extends Controller
 {
-    public function handle(Request $request) {
+    public function handle(Request $request, Response $response) {
+        error_log("******received a call request*****");
+        $data = $request->getContent();
 
-        $xmlData = $request->getContent();
-        $data = $request->request->all();
+        error_log( $data ); //todo remove line
 
-        $xml = simplexml_load_string($xmlData);
+        $arrayIncomingRequestData = explode("&", $data);
 
-        error_log($xml->isActive . ' read isActive from xml');
-        error_log($xml->sessionId . ' read sessionid from xmll');
+        $payload = $this->getFieldsFromRequest($arrayIncomingRequestData);
 
-        error_log(json_encode($data));
-
-        $payload = [
-            'isActive' => isset($data['isActive']) ?? 0,
-            'sessionId' => $data['sessionId'] ?? null,
-            'direction' => $data['direction'] ?? null,
-            'callerNumber' => $data['callerNumber'] ?? null,
-            'destinationNumber' => $data['destinationNumber'] ?? null,
-            'dtmfDigits' => $data['dtmfDigits'] ?? null,
-            'recordingUrl' => $data['recordingUrl'] ?? null,
-            'durationInSeconds' => $data['durationInSeconds'] ?? null,
-            'currencyCode' => $data['currencyCode'] ?? null,
-            'amount' => $data['amount'] ?? null,
-        ];
-
-        error_log( json_encode($payload) . ' ** read post form data from request' );
+        error_log( json_encode($payload)  );
 
 
-        if ($payload->get('isActive') == 1)  {
+        if ($payload['isActive']== "1")  {
             $handler = new AfricanTalkingDriver();
-            return "Hello Africa Talking";
-//            return $handler->buildReply($payload);
+            $handler->buildResponseheaders($response);
+            return $handler->buildReply($payload);
+        } else {
+            //end conversation
         }
-        return "Unrecognized request";
+        return "DONE";
+    }
+
+    function getFieldsFromRequest(array $arrayIncomingRequestData){
+        $i = 0;
+        $payload = [];
+        while($i < count($arrayIncomingRequestData))
+        {
+            $keyValueArr = explode("=", $arrayIncomingRequestData[$i]);
+            $payload[$keyValueArr[0] . ''] = $keyValueArr[1];
+            $i++;
+        }
+
+        return $payload;
     }
 }

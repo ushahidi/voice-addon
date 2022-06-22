@@ -15,6 +15,10 @@ $app = new Illuminate\Foundation\Application(
     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 
+//$app->middleware([
+//    App\Http\Middleware\LogRequest::class, 'handle'
+//]);
+
 /*
 |--------------------------------------------------------------------------
 | Bind Important Interfaces
