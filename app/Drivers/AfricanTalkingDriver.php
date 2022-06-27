@@ -20,6 +20,50 @@ class AfricanTalkingDriver
 
     /**
      * Build payload from incoming request.
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     */
+    public function buildPayload(Request $request)
+    {
+        $body = $request->getContent();
+
+        error_log( $body ); //todo remove line
+
+        $arrayIncomingRequestData = explode("&", $body);
+
+        $data = $this->getFieldsFromRequest($arrayIncomingRequestData);
+
+        $payload = [
+            'driver'  => 'web',
+            'message' => $payload['recordingUrl'] ?? null,
+            'userId'  => $payload['phoneNumber'] ?? null
+        ];
+
+        $this->payload = $payload;
+        $this->event = Collection::make(array_merge($data, $payload));
+        $this->files = Collection::make($request->files->all());
+        $this->config = Collection::make($this->config->get('web', []));
+    }
+
+    /**
+     * Returns true if incoming request matches the expected by this driver.
+     *
+     * @return bool
+     */
+    public function matchesRequest(): bool
+    {
+        $africasTalkingVoiceKeys = ['sessionId', 'callerNumber', 'callerCountryCode', 'isActive', 'text'];
+
+        foreach ($africasTalkingVoiceKeys as $key) {
+            if (is_null($this->event->get($key))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Build payload from incoming request.
      * @param Request $request
      */
     public function buildReply($payload)
@@ -42,5 +86,16 @@ class AfricanTalkingDriver
         ]);
     }
 
+    function getFieldsFromRequest(array $arrayIncomingRequestData){
+        $i = 0;
+        $payload = [];
+        while($i < count($arrayIncomingRequestData))
+        {
+            $keyValueArr = explode("=", $arrayIncomingRequestData[$i]);
+            $payload[$keyValueArr[0] . ''] = $keyValueArr[1];
+            $i++;
+        }
 
+        return $payload;
+    }
 }

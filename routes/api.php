@@ -17,3 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+/*
+ *  This is the route you should give Africa's Talking to send and receive messages from.
+ */
+Route::post('/africastalkingvoice', 'AfricasTalkingController@handle');
