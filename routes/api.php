@@ -22,4 +22,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 /*
  *  This is the route you should give Africa's Talking to send and receive messages from.
  */
-Route::post('/africastalkingvoice', 'AfricasTalkingController@handle');
+//Route::post('/africastalkingvoice', 'AfricasTalkingController@handle');

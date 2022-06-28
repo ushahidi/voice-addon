@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::match(array('GET', 'POST'), '/botman', [BotManController::class, 'handle']);
+Route::match(array('GET', 'POST'), '/africastalkingVoice', [\App\Http\Controllers\AfricaTalkingVoiceController::class, 'handle']);
 Route::post('/', function (Request $request) {
     error_log("received a call");
     $data = $request->getContent();

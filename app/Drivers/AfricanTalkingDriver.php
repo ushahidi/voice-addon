@@ -35,7 +35,7 @@ class AfricanTalkingDriver
         $payload = [
             'driver'  => 'web',
             'message' => $payload['recordingUrl'] ?? null,
-            'userId'  => $payload['phoneNumber'] ?? null
+            'userId'  => $payload['callerNumber'] ?? null
         ];
 
         $this->payload = $payload;
@@ -51,7 +51,7 @@ class AfricanTalkingDriver
      */
     public function matchesRequest(): bool
     {
-        $africasTalkingVoiceKeys = ['sessionId', 'callerNumber', 'callerCountryCode', 'isActive', 'text'];
+        $africasTalkingVoiceKeys = ['sessionId', 'callerNumber', 'callerCountryCode', 'isActive', 'direction'];
 
         foreach ($africasTalkingVoiceKeys as $key) {
             if (is_null($this->event->get($key))) {
@@ -63,21 +63,114 @@ class AfricanTalkingDriver
     }
 
     /**
-     * Build payload from incoming request.
-     * @param Request $request
+     * Retrieve the chat message.
+     *
+     * @return array
      */
-    public function buildReply($payload)
+    public function getMessages()
     {
-        $text = "Welcome to Ushahidi Platform survey";
-
-        // Compose the response
-        $response  = '<?xml version="1.0" encoding="UTF-8"?>';
-        $response .= '<Response>';
-        $response .= '<Say>'.$text.'</Say>';
-        $response .= '</Response>';
-
-        return $response;
+        if (empty($this->messages)) {
+            $message = $this->event->get('message');
+            $userId = $this->event->get('userId');
+            $this->messages = [new IncomingMessage($message, $userId, $userId, $this->payload)];
+        }
+        return $this->messages;
     }
+
+    /**
+     * Retrieve User information.
+     * @param IncomingMessage $matchingMessage
+     * @return User
+     */
+    public function getUser(IncomingMessage $matchingMessage)
+    {
+        return new User($matchingMessage->getSender());
+    }
+
+    /**
+     * Take outgoing messages from Botman and build payload for the service.
+     *
+     * @param string|Question|OutgoingMessage $message
+     * @param IncomingMessage $matchingMessage
+     * @param array $additionalParameters
+     *
+     * @return string|Question|OutgoingMessage
+     */
+    public function buildServicePayload($message, IncomingMessage $matchingMessage, array $additionalParameters = [])
+    {
+        if (! $message instanceof Question && ! $message instanceof OutgoingMessage) {
+            $this->errorMessage = 'Unsupported message type.';
+            $this->replyStatusCode = 500;
+        }
+
+        return $message;
+    }
+
+    /**
+     * Take all the outgoing messages and build a reply understandable by
+     * Africa's Talking USSD gateway.
+     * @param array $messages
+     * @return string|null
+     */
+    protected function buildReply($messages)
+    {
+        if (empty($messages)) {
+            return;
+        }
+
+        $sessionIsCompleted = false;
+        $replies = [];
+
+        foreach ($messages as $message) {
+            if ($message instanceof OutgoingMessage || $message instanceof Question) {
+                $replies[] = $message->getText();
+            }
+
+            if ($message instanceof LastScreen && ! $message->getCurrentPage()->hasNext()) {
+                $sessionIsCompleted = true;
+            }
+        }
+
+        error_log($replies);
+        $reply = $sessionIsCompleted ? 'END ' : 'CON ';
+
+        $reply .= implode("\n", $replies);
+
+        return $reply;
+    }
+
+    /**
+     * Send out message response.
+     */
+    public function messagesHandled()
+    {
+        $response = $this->buildReply($this->replies);
+
+        if ($response) {
+            // Reset replies
+            $this->replies = [];
+
+            \Symfony\Component\HttpFoundation\Response::create($response, $this->replyStatusCode, ['Content-Type' => 'text/plain'])->send();
+        } else {
+            Response::create(null, Response::HTTP_CONFLICT)->send();
+        }
+    }
+//    /**
+//     * Build payload from incoming request.
+//     * @param Request $request
+//     */
+//    public function buildReply($payload)
+//    {
+//        $text = "Welcome to Ushahidi Platform survey";
+//
+//        // Compose the response
+/*        $response  = '<?xml version="1.0" encoding="UTF-8"?>';*/
+//        $response .= '<Response>';
+//        $response .= '<Say>'.$text.'</Say>';
+//        $response .= '</Response>';
+//
+//        return $response;
+//    }
 
     public function buildResponseheaders(Response $response) {
         $response->withHeaders([
