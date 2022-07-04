@@ -2,33 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Conversations\ExampleConversation;
 use App\Drivers\AfricanTalkingDriver;
+use BotMan\BotMan\BotMan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class BotManController extends Controller
 {
-    public function handle(Request $request, Response $response) {
-        error_log("******received a call request*****");
-        $data = $request->getContent();
+    /**
+     * Place your BotMan logic here.
+     */
+    public function handle()
+    {
+        $botman = app('botman');
 
-        error_log( $data ); //todo remove line
+        $botman->listen();
+    }
 
-        $arrayIncomingRequestData = explode("&", $data);
+    /**
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function tinker()
+    {
+        return view('tinker');
+    }
 
-        $payload = $this->getFieldsFromRequest($arrayIncomingRequestData);
-
-        error_log( json_encode($payload)  );
-
-
-        if ($payload['isActive']== "1")  {
-            $handler = new AfricanTalkingDriver();
-            $handler->buildResponseheaders($response);
-            return $handler->buildReply($payload);
-        } else {
-            //end conversation
-        }
-        return "DONE";
+    /**
+     * Loaded through routes/botman.php.
+     * @param  BotMan $bot
+     */
+    public function startConversation(BotMan $bot)
+    {
+        $bot->startConversation(new ExampleConversation());
     }
 
     function getFieldsFromRequest(array $arrayIncomingRequestData){

@@ -8,11 +8,12 @@ use BotMan\BotMan\Messages\Incoming\IncomingMessage;
 use BotMan\BotMan\Messages\Outgoing\OutgoingMessage;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Users\User;
+use BotMan\Drivers\Web\WebDriver;
 use Illuminate\Support\Collection;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
-class AfricanTalkingDriver
+class AfricanTalkingDriver extends WebDriver
 {
     // Set your app credentials
     private  $username = 'Intern';
@@ -20,10 +21,11 @@ class AfricanTalkingDriver
 
     /**
      * Build payload from incoming request.
-     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param Request $request
      */
     public function buildPayload(Request $request)
     {
+        error_log("******building payload*****");
         $body = $request->getContent();
 
         error_log( $body ); //todo remove line
